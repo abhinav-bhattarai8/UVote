@@ -28,7 +28,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     handleCreateRoom(@ConnectedSocket() client: Socket, @MessageBody() dto: CreateRoomDto) {
         const room = this.roomsService.createRoom(client.id, dto);
         client.join(room.roomId);
-        return {event: 'roomCreated, data: room'};
+        return {event: 'roomCreated', data: room};
     }
 
     @SubscribeMessage('joinRoom')
