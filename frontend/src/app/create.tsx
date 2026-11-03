@@ -39,7 +39,7 @@ export default function CreateRoomScreen() {
         socket.emit('createRoom', payload, (response: any) => {
             if(response && response.data) {
                 router.push({
-                    pathname: '/room',
+                    pathname: '/room' as any,
                     params: {roomData: JSON.stringify(response.data), isHost: 'true' }
                 })
             }
@@ -49,7 +49,7 @@ export default function CreateRoomScreen() {
     return (
         <ScrollView contentContainerStyle = {styles.container}>
             <Text style = {styles.heading}>Create Poll</Text>
-            <TextInput placeholder='Question' value={question} onChangeText={setQuestion}/>
+            <TextInput placeholder='Question' value={question} style = {styles.input} onChangeText={setQuestion}/>
 
             <Text style = {styles.subHeading}>Options</Text>
 
@@ -63,14 +63,14 @@ export default function CreateRoomScreen() {
                       onChangeText={(text) => handleOptionChange(text,index)}/>
                       { options.length >2 && (
                         <TouchableOpacity style = {styles.removeButton} onPress = { () => removeOption(index)} >
-                            <Text style = {styles.removeButtonText}>Remove</Text>
+                            <Text style = {styles.removeButtonText}>X</Text>
                         </TouchableOpacity>
                       )}
                     </View>
                 ))
             }
 
-            <TouchableOpacity style = {styles.addButton} onPress = {() => addOption}>
+            <TouchableOpacity style = {styles.addButton} onPress = {() => addOption()}>
                 <Text style={styles.addButtonText}>Add Option</Text>
             </TouchableOpacity>
 
