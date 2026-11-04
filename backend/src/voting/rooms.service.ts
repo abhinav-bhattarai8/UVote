@@ -19,7 +19,7 @@ export class RoomsService{
         const newRoom: Room = {
             roomId: code,
             hostSocketId: hostSocketId ,
-            participants:0,
+            participants:1,
             question: dto.question,
             options: optionsMap,
             status: 'OPEN'
@@ -47,8 +47,16 @@ export class RoomsService{
             return
         }
 
+        if(room.status!='ONVOTE') {
+            return
+        }
+
         room.options[dto.voteOption].votes+=1;
     }
 
-
+    changeStatus(roomId: string, status: 'OPEN' | 'ONVOTE' | 'CLOSED') {
+        const room = this.getRoom(roomId);
+        if(!room) return
+        room.status = status;
+    }
 }

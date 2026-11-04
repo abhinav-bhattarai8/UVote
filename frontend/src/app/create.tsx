@@ -37,6 +37,7 @@ export default function CreateRoomScreen() {
         const payload = { question, options: options};
 
         socket.emit('createRoom', payload, (response: any) => {
+            console.log('Received response from server:', response);
             if(response && response.data) {
                 router.push({
                     pathname: '/room' as any,
@@ -74,7 +75,7 @@ export default function CreateRoomScreen() {
                 <Text style={styles.addButtonText}>Add Option</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.createButton} onPress = {() => handleCreate}>
+            <TouchableOpacity style={styles.createButton} onPress = {() => handleCreate()}>
                 <Text style={styles.createButtonText}>Launch Pool</Text>
             </TouchableOpacity>
 
@@ -101,4 +102,4 @@ const styles = StyleSheet.create({
     createButton: { backgroundColor: '#007AFF', padding: 15, borderRadius: 8, alignItems: 'center' },
     createButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
     backText: { color: '#007AFF', textAlign: 'center', marginTop: 20, fontSize: 16 },
-})
+});

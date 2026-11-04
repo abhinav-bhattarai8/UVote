@@ -12,26 +12,37 @@ export default function RoomScreen() {
     const [roomData, setRoomData] = useState(parsedRoom);
 
     useEffect(() => {
-        socket.on('roomUpdated', (updatedRoom)=> {
-            if(updatedRoom.roomId == roomData?.roomId) {
+
+        if(!roomData?.roomId) return;
+
+        socket.emit('joinRoom', {roomId: roomData.roomId});
+        
+        const handleRoomUpdate = (updatedRoom: any) => {
+            if (updatedRoom && updatedRoom.roomId == roomData.roomId) {
+                
                 setRoomData(updatedRoom);
+            
             }
-        });
+        }
+        socket.on('roomUpdated', handleRoomUpdate);
 
         return() => {
-            socket.off('roomUpdated');
+            socket.off('roomUpdated', handleRoomUpdate);
         }
+
     }, [roomData?.roomId]);
 
     const handleVote = (optionIndex : number) => {
-        if(roomData.status != 'OPEN') return;
-
         socket.emit('vote', {
-            roomId: roomData.roomId, voteDto: {voteOption: optionIndex}
+            roomId: roomData.roomId, dto: {voteOption: optionIndex}
         });
     }
 
-    if (!roomData) return <View><Text>Loading....</Text></View>
+    const handleStatusChange = (roomId: string, status: 'OPEN' | 'ONVOTE' | 'CLOSED') => {
+        socket.emit('changeStatus', {roomId: roomId, status:status});
+    }
+
+    if (!roomData) return (<View><Text>Loading....</Text></View>);
 
     return(
         <ScrollView contentContainerStyle={styles.container}>
@@ -44,7 +55,7 @@ export default function RoomScreen() {
 
             {
                 roomData.options.map((option: any, index: number) => (
-                    <TouchableOpacity style={styles.optionButton} key = {index} onPress = {() => handleVote(index)} disabled={roomData.status!== 'OPEN'}>
+                    <TouchableOpacity style={styles.optionButton} key = {index} onPress = {() => handleVote(index)} disabled={roomData.status!== 'ONVOTE'}>
                         <Text style={styles.optionText}>{option.text}</Text>
                         <Text style={styles.voteCount}>{option.votes} votes</Text>
                     </TouchableOpacity>
@@ -53,10 +64,17 @@ export default function RoomScreen() {
 
             {isHost && (
                 <View style={styles.adminContainer}>
+
                     <Text style={styles.adminLabel}>Admin Controls</Text>
-                    <TouchableOpacity style={styles.closeButton} onPress = {() => setRoomData({...roomData, status: 'CLOSED'})}>
-                        <Text style={styles.buttonText}>Close Voting</Text>
+                    
+                    <TouchableOpacity style={styles.startButton}  onPress = {() => handleStatusChange(roomData.roomId, 'ONVOTE')}>
+                        <Text> Start Voting </Text>
                     </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.closeButton} onPress = {() => handleStatusChange(roomData.roomId, 'CLOSED')}>
+                        <Text> Stop Voting </Text>
+                    </TouchableOpacity>
+                    
                 </View>
             )}
 
@@ -78,6 +96,7 @@ const styles = StyleSheet.create({
   voteCount: { fontSize: 16, fontWeight: 'bold', color: '#007AFF' },
   adminContainer: { marginTop: 30, padding: 15, backgroundColor: '#fff3cd', borderRadius: 8 },
   adminLabel: { fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: '#856404' },
+  startButton: { backgroundColor: '#28a745', padding: 12, borderRadius: 6, alignItems: 'center', marginBottom: 10 },
   closeButton: { backgroundColor: '#dc3545', padding: 12, borderRadius: 6, alignItems: 'center' },
   buttonText: { color: '#fff', fontWeight: '600' },
   leaveButton: { marginTop: 20, alignItems: 'center' },

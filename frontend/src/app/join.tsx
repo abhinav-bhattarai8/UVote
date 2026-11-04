@@ -14,14 +14,15 @@ export default function JoinRoomScreen() {
     }
 
     socket.emit('joinRoom', {roomId: roomId.trim()}, (response:any) =>  {
-        if (response && response.event == 'error') {
-            Alert.alert('Error', response.data.message);
-        }
-        else if (response && response.data) {
+        if (response && response.data) {
             router.push({
                 pathname: '/room' as any,
                 params: {roomData: JSON.stringify(response.data), isHost: 'false'}
             });
+        }
+
+        else {
+            Alert.alert('Error', response?.error || 'Room not found');
         }
     })
 

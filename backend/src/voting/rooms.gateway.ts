@@ -28,7 +28,7 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     handleCreateRoom(@ConnectedSocket() client: Socket, @MessageBody() dto: CreateRoomDto) {
         const room = this.roomsService.createRoom(client.id, dto);
         client.join(room.roomId);
-        return {event: 'roomCreated', data: room};
+        return {data: room};
     }
 
     @SubscribeMessage('joinRoom')
@@ -36,13 +36,13 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         
         const room = this.roomsService.getRoom(data.roomId);
         if (!room) {
-            return {event: 'error', data: {message: 'failed to join room'}}
+            return {error: 'Failed to join room'};
         }
 
         client.join(data.roomId);
         room.participants +=1;
         this.server.to(data.roomId).emit('roomUpdated', room);
-        return {event: 'joinedRoom', data: room}
+        return {data: room}
         
     }
 
@@ -55,6 +55,15 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.server.to(data.roomId).emit('roomUpdated', updatedRoom);
         }
 
+    }
+
+    @SubscribeMessage('changeStatus')
+    handleStatus(@ConnectedSocket() client: Socket, @MessageBody() data: {roomId: string, status: 'OPEN' | 'ONVOTE' | 'CLOSED'}){
+        this.roomsService.changeStatus(data.roomId, data.status);
+        const updatedRoom = this.roomsService.getRoom(data.roomId);
+        if (updatedRoom) {
+            this.server.to(data.roomId).emit('roomUpdated', updatedRoom);
+        }
     }
 }
 
