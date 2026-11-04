@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { socket } from '../socket';
 
@@ -8,6 +8,7 @@ export default function RoomScreen() {
     const params = useLocalSearchParams();
     const parsedRoom = params.roomData ? JSON.parse(params.roomData as string) : null ;
     const isHost = params.isHost == 'true';
+    const [hasVoted, setHasVoted] = useState(false);
 
     const [roomData, setRoomData] = useState(parsedRoom);
 
@@ -15,8 +16,6 @@ export default function RoomScreen() {
 
         if(!roomData?.roomId) return;
 
-        socket.emit('joinRoom', {roomId: roomData.roomId});
-        
         const handleRoomUpdate = (updatedRoom: any) => {
             if (updatedRoom && updatedRoom.roomId == roomData.roomId) {
                 
@@ -24,18 +23,31 @@ export default function RoomScreen() {
             
             }
         }
+
+        const handleRoomClosed = (data: {message: string}) => {
+            Alert.alert('Notice', data.message, [{text: 'OK', onPress: () => router.replace('/')}]);
+        }
+
         socket.on('roomUpdated', handleRoomUpdate);
+        socket.on('roomClosed', handleRoomClosed);
 
         return() => {
             socket.off('roomUpdated', handleRoomUpdate);
+            socket.off('roomClosed', handleRoomClosed);
         }
 
     }, [roomData?.roomId]);
+
+    const handleLeave = () => {
+        socket.emit('leaveRoom', { roomId: roomData.roomId });
+        router.back();
+    };
 
     const handleVote = (optionIndex : number) => {
         socket.emit('vote', {
             roomId: roomData.roomId, dto: {voteOption: optionIndex}
         });
+        setHasVoted(true);
     }
 
     const handleStatusChange = (roomId: string, status: 'OPEN' | 'ONVOTE' | 'CLOSED') => {
@@ -55,9 +67,11 @@ export default function RoomScreen() {
 
             {
                 roomData.options.map((option: any, index: number) => (
-                    <TouchableOpacity style={styles.optionButton} key = {index} onPress = {() => handleVote(index)} disabled={roomData.status!== 'ONVOTE'}>
+                    <TouchableOpacity style={styles.optionButton} key = {index} onPress = {() => handleVote(index)} disabled={roomData.status!== 'ONVOTE' || hasVoted}>
                         <Text style={styles.optionText}>{option.text}</Text>
+                        {(roomData.status === 'CLOSED') && (
                         <Text style={styles.voteCount}>{option.votes} votes</Text>
+                        )}
                     </TouchableOpacity>
                 ))
             }
@@ -78,7 +92,7 @@ export default function RoomScreen() {
                 </View>
             )}
 
-            <TouchableOpacity style={styles.leaveButton} onPress={() => router.back()}>
+            <TouchableOpacity style={styles.leaveButton} onPress={() => handleLeave()}>
                 <Text style={styles.leaveText}>Leave Room</Text>
             </TouchableOpacity>
         </ScrollView>

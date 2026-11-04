@@ -31,6 +31,20 @@ export class RoomsService{
         return newRoom;
     };
 
+    addParticipant(roomId: string): Room | undefined {
+        const room = this.getRoom(roomId);
+        if (!room) return undefined;
+        room.participants += 1;
+        return room;
+    }
+
+    removeParticipant(roomId: string): Room | undefined {
+        const room = this.getRoom(roomId);
+        if (!room) return undefined;
+        room.participants = Math.max(1, room.participants - 1);
+        return room;
+    }
+
     generateRoomId(length:number): string {
         const code = crypto.randomBytes(length).toString('hex');
         return code;
@@ -58,5 +72,15 @@ export class RoomsService{
         const room = this.getRoom(roomId);
         if(!room) return
         room.status = status;
+    }
+
+    removeRoomByHostId(hostId: string): string | undefined {
+        for (const [roomId, room] of this.rooms.entries()) {
+            if (room.hostSocketId === hostId) {
+                this.rooms.delete(roomId);
+                return roomId;
+            }
+        }
+        return undefined;
     }
 }

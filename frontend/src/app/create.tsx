@@ -76,7 +76,7 @@ export default function CreateRoomScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.createButton} onPress = {() => handleCreate()}>
-                <Text style={styles.createButtonText}>Launch Pool</Text>
+                <Text style={styles.createButtonText}>Launch Poll</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress = {() => router.back()}>

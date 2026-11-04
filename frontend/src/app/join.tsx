@@ -8,23 +8,24 @@ export default function JoinRoomScreen() {
     const [roomId, setRoomId] = useState('');
 
     const handleJoin = () => {
-        if (!roomId.trim())
+        if (!roomId.trim()) {
             Alert.alert('Error', 'Please enter a room code.');
             return;
+        }
+        socket.emit('joinRoom', {roomId: roomId.trim()}, (response:any) =>  {
+            if (response?.error) {
+                Alert.alert('Error', response.error);
+                return;
+            }
+            
+            if (response?.data) {
+                router.push({
+                    pathname: '/room',
+                    params: { roomData: JSON.stringify(response.data), isHost: 'false' }
+                });
+            }
+        });
     }
-
-    socket.emit('joinRoom', {roomId: roomId.trim()}, (response:any) =>  {
-        if (response && response.data) {
-            router.push({
-                pathname: '/room' as any,
-                params: {roomData: JSON.stringify(response.data), isHost: 'false'}
-            });
-        }
-
-        else {
-            Alert.alert('Error', response?.error || 'Room not found');
-        }
-    })
 
     return (
         <View style={styles.container}>
@@ -38,7 +39,7 @@ export default function JoinRoomScreen() {
               autoCapitalize="none"
             />
 
-            <TouchableOpacity style={styles.button} onPress = {() => handleJoin}>
+            <TouchableOpacity style={styles.button} onPress = {() => handleJoin()}>
                 <Text style={styles.buttonText}> Enter Room </Text>
             </TouchableOpacity>
 

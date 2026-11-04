@@ -22,6 +22,12 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     handleDisconnect(client: Socket) {
         console.log(`Client disconnected: ${client.id}`);
+        const closedRoomId = this.roomsService.removeRoomByHostId(client.id);
+
+        if(closedRoomId){
+            this.server.to(closedRoomId).emit('roomClosed', {message: 'Host disconnected. The poll has been closed.'});
+        }
+
     }
 
     @SubscribeMessage('createRoom')
@@ -44,6 +50,26 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.to(data.roomId).emit('roomUpdated', room);
         return {data: room}
         
+    }
+
+    @SubscribeMessage('leaveRoom')
+    handleLeaveRoom(@ConnectedSocket() client: Socket, @MessageBody() data: { roomId: string }) {
+        client.leave(data.roomId);
+        
+        const room = this.roomsService.getRoom(data.roomId);
+        if (!room) return;
+
+        if (room.hostSocketId === client.id) {
+            this.roomsService.removeRoomByHostId(client.id);
+            this.server.to(data.roomId).emit('roomClosed', { 
+                message: 'Host left the room. The poll has been closed.' 
+            });
+        } else {
+            const updatedRoom = this.roomsService.removeParticipant(data.roomId);
+            if (updatedRoom) {
+                this.server.to(data.roomId).emit('roomUpdated', updatedRoom);
+            }
+        }
     }
 
     @SubscribeMessage('vote')
