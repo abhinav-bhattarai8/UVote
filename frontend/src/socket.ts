@@ -1,11 +1,9 @@
 import { io } from 'socket.io-client';
 import { Platform } from 'react-native';
 
-const SOCKET_URL = Platform.OS === 'web' 
-  ? 'http://localhost:3000' 
-  : 'http://192.168.0.5:3000';
+const RENDER_BACKEND_URL = 'https://uvote-uwrz.onrender.com';
 
-export const socket = io(SOCKET_URL, {
-  autoConnect: true,
-  transports: ['websocket', 'polling'],
+export const socket = io(RENDER_BACKEND_URL, {
+    transports: ['websocket'], 
+    autoConnect: true,
 });
