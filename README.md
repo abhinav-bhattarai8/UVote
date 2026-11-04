@@ -22,12 +22,12 @@ UVote is a real-time mobile live polling application. A host creates a room with
 ## How It Works
 
 ```text
-┌─────────────────────────┐         Socket.IO         ┌─────────────────────────┐
-│  React Native / Expo    │  createRoom / joinRoom    │  NestJS Gateway         │
-│  Client (Mobile/Web)    │  vote / changeStatus      │  RoomsGateway           │
-│                         │ ◄───────────────────────► │  RoomsService           │
-│  src/socket.ts          │   roomUpdated/roomClosed  │  In-Memory Room Map     │
-└─────────────────────────┘                           └─────────────────────────┘
+┌─────────────────────────┐        Socket.IO        ┌─────────────────────────┐
+│  React Native / Expo    │  createRoom / joinRoom  │  NestJS Gateway         │
+│  Client (Mobile/Web)    │  vote / changeStatus    │  RoomsGateway           │
+│                         │ ◄─────────────────────► │  RoomsService           │
+│  src/socket.ts          │  roomUpdated/roomClosed │  In-Memory Room Map     │
+└─────────────────────────┘                         └─────────────────────────┘
 ```
 
 The app maintains a single WebSocket connection. The backend manages active rooms in memory without relying on slow database queries for live polling state.
@@ -79,6 +79,39 @@ npm install
 npx expo start --clear
 ```
 Scan the QR code in your terminal using **Expo Go** on your phone.
+
+---
+
+## Building Android APK (EAS Build)
+
+To build a direct standalone Android `.apk` preview file using Expo Application Services (EAS):
+
+1. Install the EAS CLI globally (if not already installed):
+   ```bash
+   npm install -g eas-cli
+   ```
+2. Log in to your Expo account:
+   ```bash
+   eas login
+   ```
+3. Ensure your `eas.json` is configured with a preview profile targeting an APK build:
+   ```json
+   {
+     "build": {
+       "preview": {
+         "android": {
+           "buildType": "apk"
+         },
+         "distribution": "internal"
+       }
+     }
+   }
+   ```
+4. Run the cloud build command:
+   ```bash
+   eas build --platform android --profile preview
+   ```
+5. Once the build finishes, scan the QR code or click the direct download link provided in your terminal to install the APK onto your Android device.
 
 ---
 
