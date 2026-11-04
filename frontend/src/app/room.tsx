@@ -9,6 +9,7 @@ export default function RoomScreen() {
     const parsedRoom = params.roomData ? JSON.parse(params.roomData as string) : null ;
     const isHost = params.isHost == 'true';
     const [hasVoted, setHasVoted] = useState(false);
+    const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
     const [roomData, setRoomData] = useState(parsedRoom);
 
@@ -47,6 +48,7 @@ export default function RoomScreen() {
         socket.emit('vote', {
             roomId: roomData.roomId, dto: {voteOption: optionIndex}
         });
+        setSelectedOption(optionIndex);
         setHasVoted(true);
     }
 
@@ -66,14 +68,18 @@ export default function RoomScreen() {
             <Text style={styles.question}>{roomData.question}</Text>
 
             {
-                roomData.options.map((option: any, index: number) => (
-                    <TouchableOpacity style={styles.optionButton} key = {index} onPress = {() => handleVote(index)} disabled={roomData.status!== 'ONVOTE' || hasVoted}>
-                        <Text style={styles.optionText}>{option.text}</Text>
-                        {(roomData.status === 'CLOSED') && (
-                        <Text style={styles.voteCount}>{option.votes} votes</Text>
-                        )}
+                roomData.options.map((option: any, index: number) => {
+                    const isSelected = selectedOption === index;
+
+                    return(
+                     <TouchableOpacity style={[styles.optionButton, isSelected && styles.selectedOptionButton]} key = {index} onPress = {() => handleVote(index)} disabled={roomData.status!== 'ONVOTE' || hasVoted}>
+                         <Text style={styles.optionText}>{option.text}</Text>
+                         {(roomData.status === 'CLOSED') && (
+                            <Text style={[styles.voteCount, isSelected && styles.selectedOptionText]}>{option.votes} votes</Text>
+                         )}
                     </TouchableOpacity>
-                ))
+                    );
+                })
             }
 
             {isHost && (
@@ -108,6 +114,8 @@ const styles = StyleSheet.create({
   optionButton: { backgroundColor: '#f0f0f0', padding: 15, borderRadius: 8, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   optionText: { fontSize: 16, fontWeight: '500' },
   voteCount: { fontSize: 16, fontWeight: 'bold', color: '#007AFF' },
+  selectedOptionButton: { backgroundColor: '#28a745', borderColor: '#1e7e34', borderWidth: 1 }, 
+selectedOptionText: { color: '#fff', fontWeight: 'bold' },
   adminContainer: { marginTop: 30, padding: 15, backgroundColor: '#fff3cd', borderRadius: 8 },
   adminLabel: { fontWeight: 'bold', marginBottom: 10, textAlign: 'center', color: '#856404' },
   startButton: { backgroundColor: '#28a745', padding: 12, borderRadius: 6, alignItems: 'center', marginBottom: 10 },
